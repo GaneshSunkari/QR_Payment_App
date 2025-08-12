@@ -6,6 +6,7 @@ import ResultSection from './components/ResultSection';
 import './App.css';
 
 function App() {
+    //Ganesh
     const [currentSection, setCurrentSection] = useState('generate');
     const [walletAddressInput, setWalletAddressInput] = useState('');
     const [scannedWalletAddress, setScannedWalletAddress] = useState('');
