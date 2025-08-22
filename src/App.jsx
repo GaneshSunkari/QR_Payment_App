@@ -180,35 +180,37 @@ function App() {
     };
 
     const onScanSuccess = useCallback((decodedText) => {
-        if (decodedText) {
-            setScannedWalletAddress(decodedText);
-            showMessage(`QR code scanned successfully! Address: ${decodedText}`, 'success');
-            stopScanner();
-        }
-    }, [showMessage, stopScanner]);
+    if (decodedText && decodedText !== scannedWalletAddress) {
+        setScannedWalletAddress(decodedText);
+        showMessage(`QR code scanned successfully! Address: ${decodedText}`, 'success');
+    }
+}, [scannedWalletAddress, showMessage]);
+
 
     const onScanFailure = useCallback(() => {}, []);
 
-    // MODIFIED: This useEffect hook is now more robust
     useEffect(() => {
-        // Only initialize if we are on the scan section and the readerRef is available
-        if (currentSection === 'scan' && readerRef.current && window.Html5QrcodeScanner) {
+        if (currentSection === "scan" && readerRef.current && window.Html5QrcodeScanner && !html5QrCodeScannerRef.current) {
             console.log("Initializing Html5QrcodeScanner...");
             const scanner = new window.Html5QrcodeScanner(
                 readerRef.current.id,
                 { fps: 10, qrbox: { width: 250, height: 250 } },
-                /* verbose= */ false
+                false
             );
             html5QrCodeScannerRef.current = scanner;
             scanner.render(onScanSuccess, onScanFailure);
         }
 
-        // The cleanup function is called when the component unmounts OR when 'currentSection' changes.
-        // This ensures the scanner is always properly closed before a new one might be opened.
         return () => {
-            stopScanner();
+            if (html5QrCodeScannerRef.current) {
+                html5QrCodeScannerRef.current.clear().catch(err => console.warn("Clear error:", err));
+                html5QrCodeScannerRef.current = null;
+            }
         };
-    }, [currentSection, readerRef, onScanSuccess, onScanFailure, stopScanner]);
+    }, [currentSection, onScanSuccess, onScanFailure]);
+
+
+
 
     const handleSendTransaction = async () => {
         if (!scannedWalletAddress) {
